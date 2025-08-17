@@ -1,5 +1,11 @@
 import uuid
 from django.db import models
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+CHAPA_SECRET_KEY = os.getenv("CHAPA_SECRET_KEY")
+CHAPA_BASE_URL = os.getenv("CHAPA_BASE_URL", "https://api.chapa.co/v1")
 
 class User(models.Model):
     ROLE_CHOICES = [
@@ -58,11 +64,20 @@ class Payment(models.Model):
         ('paypal', 'PayPal'),
         ('bank', 'Bank Transfer'),
     ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
 
     payment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name="payments")
     amount = models.DecimalField(max_digits=5, decimal_places=2)
     payment_date = models.DateTimeField()
+    transaction_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     payment_method = models.CharField(max_length=10, choices=METHOD_CHOICES)
 
 
